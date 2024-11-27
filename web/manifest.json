@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
     "name": "varshini",
     "short_name": "varshini",
+=======
+    "name": "untitled",
+    "short_name": "untitled",
+>>>>>>> 315ebe0cfc2f193390fed08f75c17d8daf91427f
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

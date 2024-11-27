@@ -1,13 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'dart:math';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:intl/intl.dart';
+import 'dart:io';
 
-const String apiUrl = 'http://127.0.0.1:5000';
 
 const Color appBarButtonColor = Color(0xFF363636);
 
@@ -35,7 +30,7 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Dashboard', style: TextStyle(color: Colors.white),),
+        title: const Text('Dashboard'),
         backgroundColor: appBarButtonColor,
       ),
       body: Center(
@@ -143,7 +138,7 @@ class User {
   final String phone;
   final String email;
   final String aadharNumber;
-  final List<File> medicalRecords;
+  final List<File> medicalRecords; // Define the medicalRecords parameter
 
   User({
     required this.userId,
@@ -153,9 +148,12 @@ class User {
     required this.phone,
     required this.email,
     required this.aadharNumber,
-    this.medicalRecords = const [],
+    this.medicalRecords = const [], // Default to an empty list if no records are provided
   });
 }
+
+List<User> users = [];
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -164,16 +162,11 @@ class SignUpScreen extends StatefulWidget {
   SignUpScreenState createState() => SignUpScreenState();
 }
 class SignUpScreenState extends State<SignUpScreen> {
-  final _nameController = TextEditingController();
-  final _dobController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  final _aadharController = TextEditingController();
   final _passwordController = TextEditingController();
   final _captchaController = TextEditingController();
 
-  bool _isLoading = false;
-  String? _selectedGender; // Gender selection
   String _captcha = '';
 
   @override
@@ -188,97 +181,6 @@ class SignUpScreenState extends State<SignUpScreen> {
     setState(() {
       _captcha = List.generate(6, (index) => characters[random.nextInt(characters.length)]).join();
     });
-  }
-
-  bool _isValidPhone(String phone) {
-    final phoneRegex = RegExp(r'^\d{10}$');
-    return phoneRegex.hasMatch(phone);
-  }
-
-  bool _isValidEmail(String email) {
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    return emailRegex.hasMatch(email);
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
-    }
-  }
-
-  Future<void> _signUp() async {
-    final name = _nameController.text;
-    final dob = _dobController.text;
-    final gender = _selectedGender; // Use the selected gender
-    final phone = _phoneController.text;
-    final email = _emailController.text;
-    final aadhar = _aadharController.text;
-    final password = _passwordController.text;
-
-    if (gender == null) {
-      _showAlert("Please select a gender.");
-      return;
-    }
-
-
-
-    if (!_isValidPhone(phone)) {
-      _showAlert("Invalid phone number. It must be 10 digits.");
-      return;
-    }
-
-    if (!_isValidEmail(email)) {
-      _showAlert("Invalid email format.");
-      return;
-    }
-
-    if (password.length < 6) {
-      _showAlert("Password should be at least 6 characters long.");
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final requestBody = json.encode({
-      'name': name,
-      'dob': dob,
-      'gender': gender,
-      'phone': phone,
-      'email': email,
-      'aadhar_number': aadhar,
-      'password': password,
-    });
-
-    final response = await http.post(
-      Uri.parse('$apiUrl/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: requestBody,
-    );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.statusCode == 201) {
-      _showAlert("Account created successfully!");
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    } else {
-      final error = json.decode(response.body)['error'];
-      _showAlert(error);
-    }
   }
 
   void _showAlert(String message) {
@@ -296,11 +198,60 @@ class SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    return emailRegex.hasMatch(email);
+  }
+
+  bool _isValidPhone(String phone) {
+    final phoneRegex = RegExp(r'^\d{10}$');
+    return phoneRegex.hasMatch(phone);
+  }
+
+  void _signUp() {
+    final phoneNumber = _phoneController.text;
+    final emailId = _emailController.text;
+    final password = _passwordController.text;
+
+    if (!_isValidPhone(phoneNumber)) {
+      _showAlert("Invalid phone number. It must be 10 digits.");
+      return;
+    }
+
+    if (!_isValidEmail(emailId)) {
+      _showAlert("Invalid email format.");
+      return;
+    }
+
+    if (password.length < 6) {
+      _showAlert("Password should be at least 6 characters long.");
+      return;
+    }
+
+    if (logs.any((log) => log.phoneNumber == phoneNumber)) {
+      _showAlert("This phone number is already registered.");
+      return;
+    }
+
+    Log customer = Log(
+      phoneNumber: phoneNumber,
+      emailId: emailId,
+      password: password,
+    );
+
+    logs.add(customer);
+    _showAlert("Account created successfully!");
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const MainScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sign Up',style: TextStyle(color: Colors.white),),
+        title: const Text('Sign Up'),
         backgroundColor: appBarButtonColor,
       ),
       body: Container(
@@ -312,116 +263,64 @@ class SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildTextField('Full Name', _nameController),
-              const SizedBox(height: 25),
-              GestureDetector(
-                onTap: () => _selectDate(context),
-                child: AbsorbPointer(
-                  child: _buildTextField('Date of Birth', _dobController),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildTextField('Phone Number', _phoneController, keyboardType: TextInputType.phone),
+            const SizedBox(height: 15),
+            _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
+            const SizedBox(height: 15),
+            _buildTextField('Password', _passwordController, obscureText: true),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Text('Captcha: $_captcha', style: const TextStyle(color: Colors.white, fontSize: 20)),
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.white),
+                  onPressed: _generateCaptcha,
                 ),
-              ),
-              Row(
-                children: [
-                  Text('Captcha: $_captcha', style: const TextStyle(color: Colors.white, fontSize: 20)),
-                  IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed: _generateCaptcha,
-                  ),
-                ],
-              ),
-              _buildTextField('Enter Captcha', _captchaController),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: const Text(
-                        'Male',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      leading: Radio<String>(
-                        value: 'Male',
-                        groupValue: _selectedGender,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGender = value;
-                          });
-                        },
-                        activeColor: Colors.blue,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: const Text(
-                        'Female',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      leading: Radio<String>(
-                        value: 'Female',
-                        groupValue: _selectedGender,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGender = value;
-                          });
-                        },
-                        activeColor: Colors.pink,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 15),
-              _buildTextField('Phone Number', _phoneController),
-              const SizedBox(height: 15),
-              _buildTextField('Email', _emailController),
-              const SizedBox(height: 15),
-              _buildTextField('Aadhar Number', _aadharController),
-              const SizedBox(height: 15),
-              _buildTextField('Password', _passwordController, obscureText: true),
-              const SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _signUp,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  backgroundColor: Colors.transparent,
+              ],
+            ),
+            _buildTextField('Enter Captcha', _captchaController),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _signUp,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.pinkAccent, Colors.blueAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
+                backgroundColor: Colors.transparent,
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.pinkAccent, Colors.blueAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                      'Create Account',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Sign Up',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool obscureText = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, bool obscureText = false}) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
       obscureText: obscureText,
       style: const TextStyle(color: Colors.white, fontSize: 18),
       decoration: InputDecoration(
@@ -449,91 +348,61 @@ class LoginScreen extends StatefulWidget {
   LoginScreenState createState() => LoginScreenState();
 }
 class LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
-
-  Future<void> _login() async {
-    final email = _emailController.text;
+  void _login() {
+    final phone = _phoneController.text;
     final password = _passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
-      _showAlert("Please fill in all fields.");
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final requestBody = json.encode({
-      'email': email,
-      'password': password,
-    });
-
-    final response = await http.post(
-      Uri.parse('$apiUrl/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: requestBody,
+    // Find user by phone number, return a dummy Log if not found
+    Log log = logs.firstWhere(
+          (log) => log.phoneNumber == phone,
+      orElse: () => Log(phoneNumber: '', emailId: '', password: ''), // Dummy user
     );
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      // Save user info, token, etc.
+    // Check if user exists and password matches
+    if (log.phoneNumber.isNotEmpty && log.password == password) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
-    } else {
-      final error = json.decode(response.body)['error'];
-      _showAlert(error);
-    }
-  }
 
-  void _showAlert(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login successful!")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid phone number or password.")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-        title: const Text('Login',style: TextStyle(color: Colors.white),),
-    backgroundColor: appBarButtonColor,
-    ),
-    body: Container(
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    colors: [Colors.grey.shade800, Colors.black],
-    begin: Alignment.bottomCenter,
-    end: Alignment.topCenter,
-    ),
-    ),
+      appBar: AppBar(
+        title: const Text('Login'),
+        backgroundColor: appBarButtonColor,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey.shade800, Colors.black],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+          ),
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
+            _buildTextField('Phone Number', _phoneController, keyboardType: TextInputType.phone),
+            const SizedBox(height: 20),
             _buildTextField('Password', _passwordController, obscureText: true),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _isLoading ? null : _login,
+              onPressed: _login,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 shape: RoundedRectangleBorder(
@@ -552,26 +421,11 @@ class LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Container(
                   alignment: Alignment.center,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
+                  child: const Text(
                     'Login',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                );
-              },
-              child: const Text(
-                'Create an Account',
-                style: TextStyle(color: Colors.white),
               ),
             ),
           ],
@@ -606,111 +460,126 @@ class LoginScreenState extends State<LoginScreen> {
 }
 
 class MainScreen extends StatelessWidget {
-  const MainScreen({super.key});
+  const MainScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Main Dashboard'),
-        backgroundColor: appBarButtonColor,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // User Info Section (mocked data for illustration)
-            const Text(
-              'Welcome, User!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Name: John Doe',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Email: john.doe@example.com',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            const SizedBox(height: 20),
+    // Get screen width to dynamically set the number of columns
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = (screenWidth ~/ 150).clamp(2, 4); // Adjust number of columns based on screen width
 
-            // Actions for the user
-            ElevatedButton(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Main Screen',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.black.withOpacity(0.7),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            onPressed: () {
+              // Navigate to the profile screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileScreen(user: users.last),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey.shade800, Colors.black],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+          ),
+        ),
+        child: GridView.count(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: 20, // Set vertical spacing between buttons
+          crossAxisSpacing: 20, // Set horizontal spacing between buttons
+          padding: const EdgeInsets.all(20), // Padding around the grid
+          children: [
+            MainScreenButton(
+              icon: Icons.create,
+              label: 'Create User',
+              gradientColors: [Colors.pinkAccent, Colors.pink],
               onPressed: () {
-                // Navigate to a different screen, for example, Profile Screen
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  MaterialPageRoute(builder: (context) => const CreateUser()),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                backgroundColor: Colors.transparent,
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.pinkAccent, Colors.blueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Go to Profile',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-              ),
             ),
-            const SizedBox(height: 20),
-
-            // Log out button
-            ElevatedButton(
+            MainScreenButton(
+              icon: Icons.search,
+              label: 'Get User',
+              gradientColors: [Colors.yellowAccent, Colors.orange.shade900],
               onPressed: () {
-                // Navigate back to the login screen (or sign-out action)
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const MessageScreen(message: 'Hi, welcome to Get User!'),
+                  ),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                backgroundColor: Colors.transparent,
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.pinkAccent, Colors.blueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+            ),
+            MainScreenButton(
+              icon: Icons.add,
+              label: 'Add Product',
+              gradientColors: [Colors.blueGrey, Colors.grey],
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MessageScreen(message: 'Hi, welcome to Add Product!'),
                   ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Log Out',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                );
+              },
+            ),
+            MainScreenButton(
+              icon: Icons.verified_rounded,
+              label: 'Check Product',
+              gradientColors: [Colors.purple, Colors.deepPurple],
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MessageScreen(message: 'Hi, welcome to Check Product!'),
                   ),
-                ),
-              ),
+                );
+              },
+            ),
+            MainScreenButton(
+              icon: Icons.file_upload_outlined,
+              label: 'Retrieve Product',
+              gradientColors: [Colors.lightGreen, Colors.green],
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MessageScreen(message: 'Hi, welcome to Retrieve Product!'),
+                  ),
+                );
+              },
+            ),
+            MainScreenButton(
+              icon: Icons.support_agent,
+              label: 'Online Assistance',
+              gradientColors: [Colors.lightBlueAccent, Colors.blueAccent],
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MessageScreen(message: 'Hi, welcome to Online Assistance!'),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -813,7 +682,6 @@ class CreateUserState extends State<CreateUser> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _aadharController = TextEditingController();
-  final _passwordController = TextEditingController();
 
   List<File> _medicalRecords = []; // List to store selected medical documents
 
@@ -825,7 +693,6 @@ class CreateUserState extends State<CreateUser> {
     _phoneController.dispose();
     _emailController.dispose();
     _aadharController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -839,47 +706,26 @@ class CreateUserState extends State<CreateUser> {
     }
   }
 
-  // Function to create a user and send data to the API
-  Future<void> _createUser() async {
-    var uri = Uri.parse('http://your-api-url/register');
-    var request = http.MultipartRequest('POST', uri);
+  void _createUser() {
+    // Collect the form data here and perform validation
 
-    // Add user data fields
-    request.fields['name'] = _nameController.text;
-    request.fields['dob'] = _dobController.text;
-    request.fields['gender'] = _genderController.text;
-    request.fields['phone'] = _phoneController.text;
-    request.fields['email'] = _emailController.text;
-    request.fields['aadhar_number'] = _aadharController.text;
-    request.fields['password'] = _passwordController.text;
+    // Assuming all validations are passed, create the User object
+    User newUser = User(
+      userId: 'USER-${Random().nextInt(999999)}',
+      name: _nameController.text,
+      dob: _dobController.text,
+      gender: _genderController.text,
+      phone: _phoneController.text,
+      email: _emailController.text,
+      aadharNumber: _aadharController.text,
+      medicalRecords: _medicalRecords, // Pass selected medical records
+    );
 
-    // Add medical records as files
-    for (var file in _medicalRecords) {
-      var fileBytes = await file.readAsBytes();
-      var multipartFile = http.MultipartFile.fromBytes(
-        'medicalRecords',
-        fileBytes,
-        filename: file.uri.pathSegments.last,
-        contentType: MediaType('application', 'octet-stream'),
-      );
-      request.files.add(multipartFile);
-    }
-
-    // Send the request
-    var response = await request.send();
-
-    if (response.statusCode == 201) {
-      // Handle success
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User created successfully!')),
-      );
-      Navigator.pop(context); // Go back after successful creation
-    } else {
-      // Handle failure
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create user: ${response.statusCode}')),
-      );
-    }
+    // Navigate to the ProfileScreen with the newUser object
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ProfileScreen(user: newUser)),
+    );
   }
 
   @override
@@ -901,30 +747,16 @@ class CreateUserState extends State<CreateUser> {
             _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 15),
             _buildTextField('Aadhaar Number', _aadharController, keyboardType: TextInputType.number),
-            const SizedBox(height: 15),
-            _buildTextField('Password', _passwordController, obscureText: true),
             const SizedBox(height: 20),
 
-            // Button to pick medical records (files)
             ElevatedButton(
               onPressed: _pickDocuments,
               child: const Text("Upload Medical Records"),
             ),
             const SizedBox(height: 20),
 
-            // Display selected medical records
-            if (_medicalRecords.isNotEmpty)
-              Column(
-                children: _medicalRecords.map((file) {
-                  return Text(file.uri.pathSegments.last); // Show file name
-                }).toList(),
-              ),
-
-            const SizedBox(height: 20),
-
-            // Button to create the user
             ElevatedButton(
-              onPressed: _createUser, // Call the create user function
+              onPressed: _createUser,
               child: const Text("Create User"),
             ),
           ],
@@ -933,12 +765,10 @@ class CreateUserState extends State<CreateUser> {
     );
   }
 
-  // Helper method to build text fields
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text, bool obscureText = false}) {
+  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(),
@@ -948,24 +778,46 @@ class CreateUserState extends State<CreateUser> {
 }
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final User user;
+  // hai
+  const ProfileScreen({Key? key, required this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: appBarButtonColor,
-      ),
-      body: Center(
+      appBar: AppBar(title: Text("${user.name}'s Profile")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Text(
-              'User Profile Details',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Name: ${user.name}"),
+            Text("Date of Birth: ${user.dob}"),
+            Text("Gender: ${user.gender}"),
+            Text("Phone: ${user.phone}"),
+            Text("Email: ${user.email}"),
+            const SizedBox(height: 20),
+            const Text(
+              "Previous Medical Records",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            // Add actual user details here
+            const SizedBox(height: 10),
+
+            // Display each medical record
+            Expanded(
+              child: ListView.builder(
+                itemCount: user.medicalRecords.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.insert_drive_file),
+                    title: Text('Document ${index + 1}'),
+                    onTap: () {
+                      // Implement viewing of document if needed
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

@@ -89,6 +89,7 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
+<<<<<<< HEAD
             VALUE "CompanyName", "com.example" "\0"
             VALUE "FileDescription", "varshini" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
@@ -96,6 +97,15 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "varshini.exe" "\0"
             VALUE "ProductName", "varshini" "\0"
+=======
+            VALUE "CompanyName", "in.codersstation" "\0"
+            VALUE "FileDescription", "untitled" "\0"
+            VALUE "FileVersion", VERSION_AS_STRING "\0"
+            VALUE "InternalName", "untitled" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 in.codersstation. All rights reserved." "\0"
+            VALUE "OriginalFilename", "untitled.exe" "\0"
+            VALUE "ProductName", "untitled" "\0"
+>>>>>>> 315ebe0cfc2f193390fed08f75c17d8daf91427f
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
