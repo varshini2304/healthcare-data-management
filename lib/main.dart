@@ -673,21 +673,21 @@ class CreateUser extends StatefulWidget {
   @override
   CreateUserState createState() => CreateUserState();
 }
+
 class CreateUserState extends State<CreateUser> {
   final _nameController = TextEditingController();
-  final _dobController = TextEditingController();
-  final _genderController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _aadharController = TextEditingController();
+
+  String? _selectedDOB;
+  String? _selectedGender;
 
   List<File> _medicalRecords = [];
 
   @override
   void dispose() {
     _nameController.dispose();
-    _dobController.dispose();
-    _genderController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _aadharController.dispose();
@@ -704,14 +704,30 @@ class CreateUserState extends State<CreateUser> {
     }
   }
 
+  // Select Date of Birth using a calendar
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDOB = "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
   // Create User and navigate to Profile Screen
   void _createUser() {
     // Collect form data and create the User object
     User newUser = User(
       userId: 'USER-${Random().nextInt(999999)}',
       name: _nameController.text,
-      dob: _dobController.text,
-      gender: _genderController.text,
+      dob: _selectedDOB ?? "",
+      gender: _selectedGender ?? "",
       phone: _phoneController.text,
       email: _emailController.text,
       aadharNumber: _aadharController.text,
@@ -738,65 +754,142 @@ class CreateUserState extends State<CreateUser> {
             end: Alignment.topCenter,
           ),
         ),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            _buildTextField('Name', _nameController),
-            const SizedBox(height: 15),
-            _buildTextField('Date of Birth', _dobController),
-            const SizedBox(height: 15),
-            _buildTextField('Gender', _genderController),
-            const SizedBox(height: 15),
-            _buildTextField('Phone Number', _phoneController, keyboardType: TextInputType.phone),
-            const SizedBox(height: 15),
-            _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
-            const SizedBox(height: 15),
-            _buildTextField('Aadhaar Number', _aadharController, keyboardType: TextInputType.number),
-            const SizedBox(height: 20),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              _buildTextField('Name', _nameController),
+              const SizedBox(height: 15),
 
-            ElevatedButton(
-              onPressed: _pickDocuments,
-              child: const Text("Upload Medical Records", style: TextStyle(color: Colors.black) ,),
-            ),
-            const SizedBox(height: 10),
-            Text('Uploaded: ${_medicalRecords.length} file(s)', style: TextStyle(fontSize: 16, color: Colors.white)),
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: _createUser,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                backgroundColor: Colors.transparent,
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.pinkAccent, Colors.blueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              // Date of Birth Selector
+              GestureDetector(
+                onTap: () => _selectDate(context),
                 child: Container(
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'Create User',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedDOB ?? 'Select Date of Birth',
+                        style: TextStyle(
+                          color: _selectedDOB == null ? Colors.white.withOpacity(0.7) : Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const Icon(Icons.calendar_today, color: Colors.white),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 15),
+
+              // Gender Selector (Radio Buttons)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Gender",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                  Row(
+                    children: [
+                      Radio<String>(
+                        value: 'Male',
+                        groupValue: _selectedGender,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedGender = value;
+                          });
+                        },
+                        activeColor: Colors.blueAccent,
+                      ),
+                      const Text(
+                        "Male",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      Radio<String>(
+                        value: 'Female',
+                        groupValue: _selectedGender,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedGender = value;
+                          });
+                        },
+                        activeColor: Colors.pinkAccent,
+                      ),
+                      const Text(
+                        "Female",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 15),
+
+              _buildTextField('Phone Number', _phoneController, keyboardType: TextInputType.phone),
+              const SizedBox(height: 15),
+              _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
+              const SizedBox(height: 15),
+              _buildTextField('Aadhaar Number', _aadharController, keyboardType: TextInputType.number),
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                onPressed: _pickDocuments,
+                child: const Text(
+                  "Upload Medical Records",
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Uploaded: ${_medicalRecords.length} file(s)',
+                style: const TextStyle(fontSize: 16, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                onPressed: _createUser,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  backgroundColor: Colors.transparent,
+                ),
+                child: Ink(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.pinkAccent, Colors.blueAccent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'Create User',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // TextField widget with custom decoration to match the SignUpScreen design
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text, bool obscureText = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {TextInputType keyboardType = TextInputType.text, bool obscureText = false}) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -819,8 +912,6 @@ class CreateUserState extends State<CreateUser> {
     );
   }
 }
-
-
 class ProfileScreen extends StatelessWidget {
   final User user;
   // hai
