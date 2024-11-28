@@ -673,7 +673,6 @@ class CreateUser extends StatefulWidget {
   @override
   CreateUserState createState() => CreateUserState();
 }
-
 class CreateUserState extends State<CreateUser> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -704,7 +703,6 @@ class CreateUserState extends State<CreateUser> {
     }
   }
 
-  // Select Date of Birth using a calendar
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -720,7 +718,6 @@ class CreateUserState extends State<CreateUser> {
     }
   }
 
-  // Create User and navigate to Profile Screen
   void _createUser() {
     // Collect form data and create the User object
     User newUser = User(
@@ -734,7 +731,6 @@ class CreateUserState extends State<CreateUser> {
       medicalRecords: _medicalRecords,
     );
 
-    // Navigate to ProfileScreen with the newUser object
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ProfileScreen(user: newUser)),
@@ -746,7 +742,7 @@ class CreateUserState extends State<CreateUser> {
     return Scaffold(
       appBar: AppBar(title: const Text('Create User')),
       body: Container(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(30.0),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.grey.shade800, Colors.black],
@@ -757,9 +753,9 @@ class CreateUserState extends State<CreateUser> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
               _buildTextField('Name', _nameController),
-              const SizedBox(height: 15),
+              const SizedBox(height: 22),
 
               // Date of Birth Selector
               GestureDetector(
@@ -786,7 +782,7 @@ class CreateUserState extends State<CreateUser> {
                   ),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 22),
 
               // Gender Selector (Radio Buttons)
               Column(
@@ -830,28 +826,28 @@ class CreateUserState extends State<CreateUser> {
                   ),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 22),
 
               _buildTextField('Phone Number', _phoneController, keyboardType: TextInputType.phone),
-              const SizedBox(height: 15),
+              const SizedBox(height: 22),
               _buildTextField('Email', _emailController, keyboardType: TextInputType.emailAddress),
-              const SizedBox(height: 15),
+              const SizedBox(height: 22),
               _buildTextField('Aadhaar Number', _aadharController, keyboardType: TextInputType.number),
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
 
               ElevatedButton(
                 onPressed: _pickDocuments,
                 child: const Text(
                   "Upload Medical Records",
-                  style: TextStyle(color: Colors.black),
+                  style: TextStyle(fontSize: 15,color: Colors.black),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 22),
               Text(
                 'Uploaded: ${_medicalRecords.length} file(s)',
                 style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 26),
 
               ElevatedButton(
                 onPressed: _createUser,
@@ -912,6 +908,7 @@ class CreateUserState extends State<CreateUser> {
     );
   }
 }
+
 class ProfileScreen extends StatelessWidget {
   final User user;
   // hai
