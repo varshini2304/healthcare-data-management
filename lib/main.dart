@@ -2,7 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:io';
-
+import 'package:intl/intl.dart';
 
 const Color appBarButtonColor = Color(0xFF363636);
 
@@ -512,7 +512,7 @@ class MainScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CreateUser()),
+                  MaterialPageRoute(builder: (context) => CreateUser()),
                 );
               },
             ),
@@ -670,8 +670,6 @@ class MessageScreen extends StatelessWidget {
 }
 
 class CreateUser extends StatefulWidget {
-  const CreateUser({Key? key}) : super(key: key);
-
   @override
   CreateUserState createState() => CreateUserState();
 }
@@ -683,7 +681,7 @@ class CreateUserState extends State<CreateUser> {
   final _emailController = TextEditingController();
   final _aadharController = TextEditingController();
 
-  List<File> _medicalRecords = []; // List to store selected medical documents
+  List<File> _medicalRecords = [];
 
   @override
   void dispose() {
@@ -706,10 +704,9 @@ class CreateUserState extends State<CreateUser> {
     }
   }
 
+  // Create User and navigate to Profile Screen
   void _createUser() {
-    // Collect the form data here and perform validation
-
-    // Assuming all validations are passed, create the User object
+    // Collect form data and create the User object
     User newUser = User(
       userId: 'USER-${Random().nextInt(999999)}',
       name: _nameController.text,
@@ -718,10 +715,10 @@ class CreateUserState extends State<CreateUser> {
       phone: _phoneController.text,
       email: _emailController.text,
       aadharNumber: _aadharController.text,
-      medicalRecords: _medicalRecords, // Pass selected medical records
+      medicalRecords: _medicalRecords,
     );
 
-    // Navigate to the ProfileScreen with the newUser object
+    // Navigate to ProfileScreen with the newUser object
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ProfileScreen(user: newUser)),
@@ -732,10 +729,18 @@ class CreateUserState extends State<CreateUser> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Create User')),
-      body: Padding(
+      body: Container(
         padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey.shade800, Colors.black],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+          ),
+        ),
         child: Column(
           children: [
+            const SizedBox(height: 20),
             _buildTextField('Name', _nameController),
             const SizedBox(height: 15),
             _buildTextField('Date of Birth', _dobController),
@@ -751,13 +756,38 @@ class CreateUserState extends State<CreateUser> {
 
             ElevatedButton(
               onPressed: _pickDocuments,
-              child: const Text("Upload Medical Records"),
+              child: const Text("Upload Medical Records", style: TextStyle(color: Colors.black) ,),
             ),
+            const SizedBox(height: 10),
+            Text('Uploaded: ${_medicalRecords.length} file(s)', style: TextStyle(fontSize: 16, color: Colors.white)),
             const SizedBox(height: 20),
 
             ElevatedButton(
               onPressed: _createUser,
-              child: const Text("Create User"),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                backgroundColor: Colors.transparent,
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.pinkAccent, Colors.blueAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Create User',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -765,17 +795,31 @@ class CreateUserState extends State<CreateUser> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+  // TextField widget with custom decoration to match the SignUpScreen design
+  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text, bool obscureText = false}) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      obscureText: obscureText,
+      style: const TextStyle(color: Colors.white, fontSize: 18),
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(),
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 20),
+        filled: true,
+        fillColor: Colors.white10,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
+        ),
       ),
     );
   }
 }
+
 
 class ProfileScreen extends StatelessWidget {
   final User user;
