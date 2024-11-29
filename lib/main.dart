@@ -476,13 +476,23 @@ class MainScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person, color: Colors.white),
             onPressed: () {
-              // Navigate to the profile screen
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ProfileScreen(user: users.last),
-                ),
-              );
+              // Check if the users list is not empty
+              if (users.isNotEmpty) {
+                // Navigate to the profile screen and pass the last user as an example
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(user: users.last),
+                  ),
+                );
+              } else {
+                // Optionally, handle the case where there are no users
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("No user data available."),
+                  ),
+                );
+              }
             },
           ),
         ],
@@ -504,7 +514,7 @@ class MainScreen extends StatelessWidget {
             MainScreenButton(
               icon: Icons.create,
               label: 'Create User',
-              gradientColors: [Colors.pinkAccent, Colors.pink],
+              gradientColors: [Colors.tealAccent, Colors.teal],
               onPressed: () {
                 Navigator.push(
                   context,
@@ -515,7 +525,7 @@ class MainScreen extends StatelessWidget {
             MainScreenButton(
               icon: Icons.search,
               label: 'Get User',
-              gradientColors: [Colors.yellowAccent, Colors.orange.shade900],
+              gradientColors: [Colors.tealAccent, Colors.teal],
               onPressed: () {
                 Navigator.push(
                   context,
@@ -528,7 +538,7 @@ class MainScreen extends StatelessWidget {
             MainScreenButton(
               icon: Icons.add,
               label: 'Add Product',
-              gradientColors: [Colors.blueGrey, Colors.grey],
+              gradientColors: [Colors.tealAccent, Colors.teal],
               onPressed: () {
                 Navigator.push(
                   context,
@@ -541,7 +551,7 @@ class MainScreen extends StatelessWidget {
             MainScreenButton(
               icon: Icons.verified_rounded,
               label: 'Check Product',
-              gradientColors: [Colors.purple, Colors.deepPurple],
+              gradientColors: [Colors.tealAccent, Colors.teal],
               onPressed: () {
                 Navigator.push(
                   context,
@@ -554,7 +564,7 @@ class MainScreen extends StatelessWidget {
             MainScreenButton(
               icon: Icons.file_upload_outlined,
               label: 'Retrieve Product',
-              gradientColors: [Colors.lightGreen, Colors.green],
+              gradientColors: [Colors.tealAccent, Colors.teal],
               onPressed: () {
                 Navigator.push(
                   context,
@@ -567,7 +577,7 @@ class MainScreen extends StatelessWidget {
             MainScreenButton(
               icon: Icons.support_agent,
               label: 'Online Assistance',
-              gradientColors: [Colors.lightBlueAccent, Colors.blueAccent],
+              gradientColors: [Colors.tealAccent, Colors.teal],
               onPressed: () {
                 Navigator.push(
                   context,
@@ -934,28 +944,57 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("${user.name} - Profile"),
+        backgroundColor: Colors.teal,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Name: ${user.name}"),
-            Text("Date of Birth: ${user.dob}"),
-            Text("Gender: ${user.gender}"),
-            Text("Phone: ${user.phone}"),
-            Text("Email: ${user.email}"),
-            const SizedBox(height: 20),
-            const Text(
-              "Previous Medical Records",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // User Info Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Personal Details",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text("Name: ${user.name}", style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 6),
+                      Text("Date of Birth: ${user.dob}", style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 6),
+                      Text("Gender: ${user.gender}", style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 6),
+                      Text("Phone: ${user.phone}", style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 6),
+                      Text("Email: ${user.email}", style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
 
-            // Display placeholder if no medical records
-            user.medicalRecords.isEmpty
-                ? Expanded(
-              child: Center(
+              // Medical Records Section
+              const Text(
+                "Previous Medical Records",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+              ),
+              const SizedBox(height: 10),
+              user.medicalRecords.isEmpty
+                  ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -963,6 +1002,7 @@ class ProfileScreen extends StatelessWidget {
                       'assets/placeholder_image.png',
                       height: 150,
                       width: 150,
+                      fit: BoxFit.cover,
                     ),
                     const SizedBox(height: 10),
                     const Text(
@@ -971,38 +1011,57 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            )
-                : Expanded(
-              child: ListView.builder(
+              )
+                  : ListView.builder(
+                shrinkWrap: true,
                 itemCount: user.medicalRecords.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: const Icon(Icons.insert_drive_file),
-                    title: Text('Document ${index + 1}'),
-                    onTap: () {
-                      // Implement viewing of document if needed
-                    },
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    elevation: 3,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      leading: const Icon(Icons.insert_drive_file, color: Colors.teal),
+                      title: Text('Document ${index + 1}', style: TextStyle(fontSize: 16)),
+                      subtitle: const Text('Tap to view', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                      onTap: () {
+                        // Implement viewing of document if needed
+                      },
+                    ),
                   );
                 },
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate back to CreateUser screen and pass user data for editing
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CreateUser(
-                      existingUser: user,
+              const SizedBox(height: 20),
+
+              // Edit Details Button
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Navigate back to CreateUser screen and pass user data for editing
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CreateUser(
+                          existingUser: user,
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                );
-              },
-              child: const Text('Edit Details'),
-            ),
-          ],
+                  child: const Text(
+                    'Edit Details',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
