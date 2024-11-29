@@ -128,31 +128,28 @@ class Log {
   });
 }
 List<Log> logs = [];
-
 class User {
-  final String userId;
-  final String name;
-  final String dob;
-  final String gender;
-  final String phone;
-  final String email;
-  final String aadharNumber;
-  final List<File> medicalRecords; // Define the medicalRecords parameter
+  String userId;
+  String name;
+  String dob;
+  String gender;
+  String phone;
+  String email;
+  String aadharNumber;
+  List<File> medicalRecords;
 
   User({
     required this.userId,
-    required this.name,
-    required this.dob,
-    required this.gender,
-    required this.phone,
-    required this.email,
-    required this.aadharNumber,
-    this.medicalRecords = const [], // Default to an empty list if no records are provided
+    this.name = "Your Name Here",
+    this.dob = "Your DOB Here",
+    this.gender = "Your Gender Here",
+    this.phone = "Your Phone Number Here",
+    this.email = "Your Email Here",
+    this.aadharNumber = "Your Aadhaar Number Here",
+    this.medicalRecords = const [],
   });
 }
-
 List<User> users = [];
-
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -669,6 +666,10 @@ class MessageScreen extends StatelessWidget {
 }
 
 class CreateUser extends StatefulWidget {
+  final User? existingUser; // Added the named parameter
+
+  CreateUser({Key? key, this.existingUser}) : super(key: key);
+
   @override
   CreateUserState createState() => CreateUserState();
 }
@@ -682,6 +683,20 @@ class CreateUserState extends State<CreateUser> {
   String? _selectedGender;
 
   List<File> _medicalRecords = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingUser != null) {
+      _nameController.text = widget.existingUser!.name;
+      _phoneController.text = widget.existingUser!.phone;
+      _emailController.text = widget.existingUser!.email;
+      _aadharController.text = widget.existingUser!.aadharNumber;
+      _selectedDOB = widget.existingUser!.dob;
+      _selectedGender = widget.existingUser!.gender;
+      _medicalRecords = widget.existingUser!.medicalRecords;
+    }
+  }
 
   @override
   void dispose() {
@@ -721,15 +736,16 @@ class CreateUserState extends State<CreateUser> {
     // Collect form data and create the User object
     User newUser = User(
       userId: 'USER-${Random().nextInt(999999)}',
-      name: _nameController.text,
-      dob: _selectedDOB ?? "",
-      gender: _selectedGender ?? "",
-      phone: _phoneController.text,
-      email: _emailController.text,
-      aadharNumber: _aadharController.text,
+      name: _nameController.text.isEmpty ? "Your Name Here" : _nameController.text,
+      dob: _selectedDOB ?? "Your DOB Here",
+      gender: _selectedGender ?? "Your Gender Here",
+      phone: _phoneController.text.isEmpty ? "Your Phone Number Here" : _phoneController.text,
+      email: _emailController.text.isEmpty ? "Your Email Here" : _emailController.text,
+      aadharNumber: _aadharController.text.isEmpty ? "Your Aadhaar Number Here" : _aadharController.text,
       medicalRecords: _medicalRecords,
     );
 
+    // Navigate to ProfileScreen with the newUser object
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ProfileScreen(user: newUser)),
@@ -838,7 +854,7 @@ class CreateUserState extends State<CreateUser> {
                 onPressed: _pickDocuments,
                 child: const Text(
                   "Upload Medical Records",
-                  style: TextStyle(fontSize: 15,color: Colors.black),
+                  style: TextStyle(fontSize: 15, color: Colors.black),
                 ),
               ),
               const SizedBox(height: 22),
@@ -907,6 +923,7 @@ class CreateUserState extends State<CreateUser> {
     );
   }
 }
+
 class ProfileScreen extends StatelessWidget {
   final User user;
 
@@ -915,17 +932,19 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("${user.name ?? 'Your Name Here'}'s Profile")),
+      appBar: AppBar(
+        title: Text("${user.name} - Profile"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Name: ${user.name ?? 'Your Name Here'}"),
-            Text("Date of Birth: ${user.dob ?? 'Your DOB Here'}"),
-            Text("Gender: ${user.gender ?? 'Your Gender Here'}"),
-            Text("Phone: ${user.phone ?? 'Your Phone Number Here'}"),
-            Text("Email: ${user.email ?? 'Your Email Here'}"),
+            Text("Name: ${user.name}"),
+            Text("Date of Birth: ${user.dob}"),
+            Text("Gender: ${user.gender}"),
+            Text("Phone: ${user.phone}"),
+            Text("Email: ${user.email}"),
             const SizedBox(height: 20),
             const Text(
               "Previous Medical Records",
@@ -934,40 +953,55 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             // Display placeholder if no medical records
-            user.medicalRecords == null || user.medicalRecords!.isEmpty
+            user.medicalRecords.isEmpty
                 ? Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/placeholder_image.png',
-                            height: 150,
-                            width: 150,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            "You have not uploaded any medical records.",
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
-                        ],
-                      ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/placeholder_image.png',
+                      height: 150,
+                      width: 150,
                     ),
-                  )
+                    const SizedBox(height: 10),
+                    const Text(
+                      "You have not uploaded any medical records.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            )
                 : Expanded(
-                    child: ListView.builder(
-                      itemCount: user.medicalRecords!.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: const Icon(Icons.insert_drive_file),
-                          title: Text('Document ${index + 1}'),
-                          onTap: () {
-                            // Implement viewing of document if needed
-                          },
-                        );
-                      },
+              child: ListView.builder(
+                itemCount: user.medicalRecords.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: const Icon(Icons.insert_drive_file),
+                    title: Text('Document ${index + 1}'),
+                    onTap: () {
+                      // Implement viewing of document if needed
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate back to CreateUser screen and pass user data for editing
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateUser(
+                      existingUser: user,
                     ),
                   ),
+                );
+              },
+              child: const Text('Edit Details'),
+            ),
           ],
         ),
       ),
