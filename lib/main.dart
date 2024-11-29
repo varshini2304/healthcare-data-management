@@ -2,7 +2,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:io';
-import 'package:intl/intl.dart';
 
 const Color appBarButtonColor = Color(0xFF363636);
 
@@ -908,26 +907,25 @@ class CreateUserState extends State<CreateUser> {
     );
   }
 }
-
 class ProfileScreen extends StatelessWidget {
   final User user;
-  // hai
+
   const ProfileScreen({Key? key, required this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("${user.name}'s Profile")),
+      appBar: AppBar(title: Text("${user.name ?? 'Your Name Here'}'s Profile")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Name: ${user.name}"),
-            Text("Date of Birth: ${user.dob}"),
-            Text("Gender: ${user.gender}"),
-            Text("Phone: ${user.phone}"),
-            Text("Email: ${user.email}"),
+            Text("Name: ${user.name ?? 'Your Name Here'}"),
+            Text("Date of Birth: ${user.dob ?? 'Your DOB Here'}"),
+            Text("Gender: ${user.gender ?? 'Your Gender Here'}"),
+            Text("Phone: ${user.phone ?? 'Your Phone Number Here'}"),
+            Text("Email: ${user.email ?? 'Your Email Here'}"),
             const SizedBox(height: 20),
             const Text(
               "Previous Medical Records",
@@ -935,21 +933,41 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // Display each medical record
-            Expanded(
-              child: ListView.builder(
-                itemCount: user.medicalRecords.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: const Icon(Icons.insert_drive_file),
-                    title: Text('Document ${index + 1}'),
-                    onTap: () {
-                      // Implement viewing of document if needed
-                    },
-                  );
-                },
-              ),
-            ),
+            // Display placeholder if no medical records
+            user.medicalRecords == null || user.medicalRecords!.isEmpty
+                ? Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/placeholder_image.png',
+                            height: 150,
+                            width: 150,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            "You have not uploaded any medical records.",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: user.medicalRecords!.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: const Icon(Icons.insert_drive_file),
+                          title: Text('Document ${index + 1}'),
+                          onTap: () {
+                            // Implement viewing of document if needed
+                          },
+                        );
+                      },
+                    ),
+                  ),
           ],
         ),
       ),
