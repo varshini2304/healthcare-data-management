@@ -1,12 +1,17 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter/material.dart';
+import 'api_service.dart'; // Import the file containing the ApiService class
+import 'package:firebase_core/firebase_core.dart';
 import 'dart:io';
-
 const Color appBarButtonColor = Color(0xFF363636);
 
 void main() {
-  runApp(const MyApp());
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: DashboardScreen(), // Remove 'const' here
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,7 +19,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: DashboardScreen(),
     );
@@ -22,100 +27,79 @@ class MyApp extends StatelessWidget {
 }
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  // Instantiate ApiService
+  final ApiService apiService = ApiService();
+
+  DashboardScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        backgroundColor: appBarButtonColor,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Sign Up Button with Dual Color Gradient
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.pinkAccent, Colors.blueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                  child: const Text(
-                    'Sign Up',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            // Login Button with Dual Color Gradient
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.pinkAccent, Colors.blueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: const Text('Dashboard')),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: fetchUser,
+            child: const Text('Get User'),
+          ),
+          ElevatedButton(
+            onPressed: createUser,
+            child: const Text('Create User'),
+          ),
+          ElevatedButton(
+            onPressed: addProduct,
+            child: const Text('Add Product'),
+          ),
+          ElevatedButton(
+            onPressed: checkProduct,
+            child: const Text('Check Product'),
+          ),
+        ],
       ),
     );
   }
+
+  // Fetch user details
+  void fetchUser() async {
+    try {
+      final user = await apiService.getUser('123'); // Replace '123' with actual user ID
+      print('User fetched: $user');
+    } catch (e) {
+      print('Error fetching user: $e');
+    }
+  }
+
+  // Create a new user
+  void createUser() async {
+    try {
+      final result = await apiService.createUser('123', 'John Doe'); // Replace with actual data
+      print('User created: $result');
+    } catch (e) {
+      print('Error creating user: $e');
+    }
+  }
+
+  // Add a product
+  void addProduct() async {
+    try {
+      final result = await apiService.addProduct('001', 'Laptop', '123'); // Replace with actual data
+      print('Product added: $result');
+    } catch (e) {
+      print('Error adding product: $e');
+    }
+  }
+
+  // Check product details
+  void checkProduct() async {
+    try {
+      final product = await apiService.checkProduct('001'); // Replace '001' with actual product ID
+      print('Product details: $product');
+    } catch (e) {
+      print('Error fetching product: $e');
+    }
+  }
 }
+
 class Log {
   final String phoneNumber;
   final String emailId;

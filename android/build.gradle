@@ -1,9 +1,28 @@
+
+
+
+buildscript {
+    repositories {
+        google() // For Google dependencies like Google Services
+        mavenCentral() // Ensures external dependencies can be resolved
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.2'// Match the version to your setup
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10'
+        classpath 'com.google.gms:google-services:4.3.15'
+    }
+}
+
 allprojects {
     repositories {
         google()
         mavenCentral()
     }
 }
+
+
+
+
 
 rootProject.buildDir = "../build"
 subprojects {

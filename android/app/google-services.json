@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "853788923382",
+    "project_id": "healthcare-data-manageme-b0809",
+    "storage_bucket": "healthcare-data-manageme-b0809.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853788923382:android:f4d469782b5338fa1423d7",
+        "android_client_info": {
+          "package_name": "com.example.varshini"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSYI2PU387XCkOWYPxR_5lE7uijVKtxQA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853788923382:android:dd917c643530eec71423d7",
+        "android_client_info": {
+          "package_name": "com.example.varshini.Myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSYI2PU387XCkOWYPxR_5lE7uijVKtxQA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

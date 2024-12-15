@@ -1,98 +1,55 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-import random
-import string
-import os
 
 app = Flask(__name__)
-CORS(app)
 
-UPLOAD_FOLDER = 'uploaded_medical_records'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# Mock Blockchain Functionality (Replace with actual blockchain interaction)
+blockchain_data = {
+    "users": {},
+    "products": {}
+}
 
+# Endpoint to get user details
+@app.route('/get_user', methods=['GET'])
+def get_user():
+    user_id = request.args.get('user_id')
+    user = blockchain_data['users'].get(user_id)
+    if user:
+        return jsonify({"status": "success", "data": user}), 200
+    return jsonify({"status": "error", "message": "User not found"}), 404
 
-users_db = []
-
-def generate_captcha():
-    characters = string.ascii_uppercase + string.digits
-    captcha = ''.join(random.choice(characters) for _ in range(6))
-    return captcha
-
-@app.route('/register', methods=['POST'])
-def register():
+# Endpoint to create a user
+@app.route('/create_user', methods=['POST'])
+def create_user():
     data = request.json
-    name = data.get('name')
-    dob = data.get('dob')
-    gender = data.get('gender')
-    phone = data.get('phone')
-    email = data.get('email')
-    aadhar_number = data.get('aadhar_number')
-    password = data.get('password')
+    user_id = data.get('user_id')
+    user_name = data.get('user_name')
+    if user_id in blockchain_data['users']:
+        return jsonify({"status": "error", "message": "User already exists"}), 400
+    blockchain_data['users'][user_id] = {"name": user_name}
+    return jsonify({"status": "success", "message": "User created"}), 201
 
-    # Validation
-    if len(phone) != 10 or not phone.isdigit():
-        return jsonify({"error": "Invalid phone number"}), 400
-
-    if not email or '@' not in email:
-        return jsonify({"error": "Invalid email"}), 400
-
-    if len(password) < 6:
-        return jsonify({"error": "Password too short"}), 400
-
-    if not name or not dob or not gender or not aadhar_number:
-        return jsonify({"error": "All fields are required"}), 400
-
-    # Check if user already exists
-    if any(user['phone'] == phone for user in users_db):
-        return jsonify({"error": "User already registered"}), 400
-
-    # Process medical records if they exist
-    medical_records = []
-    if 'medicalRecords' in request.files:
-        files = request.files.getlist('medicalRecords')
-        for file in files:
-            # Save each file to the server
-            if file:
-                filename = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-                file.save(filename)
-                medical_records.append(filename)  # Store the file path in the DB
-
-    # Create user
-    user = {
-        'name': name,
-        'dob': dob,
-        'gender': gender,
-        'phone': phone,
-        'email': email,
-        'aadhar_number': aadhar_number,
-        'password': password,
-        'medical_records': medical_records  # Add medical records info
-    }
-
-    # Save user to "database"
-    users_db.append(user)
-
-    return jsonify({"message": "Registration successful"}), 201
-
-@app.route('/login', methods=['POST'])
-def login():
+# Endpoint to add a product
+@app.route('/add_product', methods=['POST'])
+def add_product():
     data = request.json
-    phone = data.get('phone')
-    password = data.get('password')
+    product_id = data.get('product_id')
+    product_name = data.get('product_name')
+    owner_id = data.get('owner_id')
+    if product_id in blockchain_data['products']:
+        return jsonify({"status": "error", "message": "Product already exists"}), 400
+    if owner_id not in blockchain_data['users']:
+        return jsonify({"status": "error", "message": "Owner not found"}), 404
+    blockchain_data['products'][product_id] = {"name": product_name, "owner": owner_id}
+    return jsonify({"status": "success", "message": "Product added"}), 201
 
-    user = next((user for user in users_db if user['phone'] == phone), None)
-    if user is None or user['password'] != password:
-        return jsonify({"error": "Invalid phone number or password"}), 401
-
-    return jsonify({"message": "Login successful", "user": user}), 200
-
-
-@app.route('/captcha', methods=['GET'])
-def captcha():
-    captcha = generate_captcha()
-    return jsonify({"captcha": captcha})
+# Endpoint to check product details
+@app.route('/check_product', methods=['GET'])
+def check_product():
+    product_id = request.args.get('product_id')
+    product = blockchain_data['products'].get(product_id)
+    if product:
+        return jsonify({"status": "success", "data": product}), 200
+    return jsonify({"status": "error", "message": "Product not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
